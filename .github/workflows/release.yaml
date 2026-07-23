@@ -1,0 +1,53 @@
+# Release workflow template for a PUBLIC fylr plugin.
+#
+# Copy to .github/workflows/release.yaml. A manager publishes a release on the
+# GitHub release page (tag vX.Y.Z); this builds the plugin zip and attaches it.
+# The asset URL — https://github.com/<org>/<repo>/releases/latest/download/<repo>.zip
+# — is what fylr installs from, so the release must be PUBLISHED, not draft
+# (a draft's assets are not reachable under releases/latest).
+#
+# Sealed plugin? Replace "make zip" with "make seal" and ship
+# build/<repo>_sealed.zip instead — sealing needs no secret (public key only),
+# see fylr-build-plugin seal.
+name: Release
+
+on:
+  release:
+    types:
+      - published
+      - edited
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # drop the node/coffee steps if the plugin has no CoffeeScript;
+      # add "npm install -g sass" if it has SCSS
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install CoffeeScript and sass
+        run: sudo npm install -g coffeescript@1.12.7 sass
+
+      - name: Install golang
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26"
+          # a plugin repo has no go.mod for the dependency cache to key on
+          cache: false
+
+      - name: Build and package
+        run: make zip
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          ZIP_NAME: ${{ github.event.repository.name }}.zip
+
+      - name: Attach plugin zip to the release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            build/${{ github.event.repository.name }}.zip

@@ -1,0 +1,28 @@
+# Build configuration for fylr-build-plugin — the explicit build description.
+# Delivered files are listed here; "check" (runs with every build) warns when
+# a manifest reference is missing from the build folder.
+# All features: https://github.com/programmfabrik/fylr-build-plugin
+
+server:
+  install:
+    - l10n
+
+webfrontend:
+  # CoffeeScript 1.x, compiled + concatenated in this order into
+  # plugin.webfrontend.url (webfrontend/custom-data-type-html-editor.js)
+  coffee1:
+    - webfrontend/CustomDataTypeHtmlEditor.coffee
+    - webfrontend/CustomDataTypeHtmlEditorCSVImporterDestinationField.coffee
+  # compiled to same-named .css; base.css is loaded into the editor and
+  # detail iframes, custom-data-type-html-editor.css is the plugin css
+  scss:
+    - webfrontend/custom-data-type-html-editor.scss
+    - webfrontend/base.scss
+  install:
+    - webfrontend/fonts
+    - webfrontend/tinymce
+
+loca:
+  - csv: l10n/custom-data-type-html-editor.csv
+    sheet: 1Z3UPJ6XqLBp-P8SUf-ewq4osNJ3iZWKJB83tc6Wrfn0
+    gid: "926543909"

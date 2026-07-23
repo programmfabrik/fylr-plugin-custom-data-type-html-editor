@@ -1,0 +1,37 @@
+// NG vars
+:root {
+	--ng-padding: 5px;
+}
+
+.ez5-custom-data-type-html-editor-iframe {
+	border: none;
+	width: 100%;
+}	
+
+.ez5-custom-data-type-html-editor-description {
+	margin-bottom: var(--pane-padding, var(--ng-padding));
+}
+
+.ez5-custom-data-type-html-editor-fixed-height {
+	height: 200px;
+}
+
+// Editor Window
+.ez5-custom-data-type-html-editor-window {
+	padding: calc(2* var(--pane-padding, var(--ng-padding)));
+	background-color: var(--pane-background);
+
+    > .cui-vertical-layout-bottom {
+        margin-top: calc(2* var(--pane-padding, var(--ng-padding)));
+    }
+}
+
+.tox .tox-collection__item-label {
+    white-space: nowrap;
+}
+
+.ez5-custom-data-type-html-editor {
+    .ez5-field-value.cui-vertical-layout .cui-vertical-layout-bottom {
+        margin-top: calc(2 * var(--pane-padding, var(--ng-padding)));
+    }
+}

@@ -1,0 +1,37 @@
+plugin:
+  name: custom-data-type-html-editor
+  version: "1"
+  url: https://github.com/programmfabrik/fylr-plugin-custom-data-type-html-editor
+  displayname:
+    de-DE: "Custom Data Type: HTML Editor"
+    en-US: "Custom Data Type: HTML Editor"
+  info:
+    de-DE: |
+      Ergänzt einen benutzerdefinierten Datentyp, mit dem eigene HTML-Inhalte direkt in einem Feld erstellt und gespeichert werden können. Die Bearbeitung erfolgt in einem komfortablen WYSIWYG-Editor, sodass formatierter Text ohne manuelles Schreiben von Markup gepflegt werden kann.
+
+      Auf Basis des Editors [TinyMCE](https://www.tiny.cloud/).
+    en-US: |
+      Adds a custom data type that lets editors create and store custom HTML content directly in a field. Content is edited in a rich WYSIWYG editor, so formatted text can be maintained without writing markup by hand.
+
+      Powered by the [TinyMCE](https://www.tiny.cloud/) editor.
+  l10n: l10n/custom-data-type-html-editor.csv
+  webfrontend:
+    url: custom-data-type-html-editor.js
+    css: custom-data-type-html-editor.css
+
+base_url_prefix: "webfrontend"
+
+custom_types:
+  html_editor:
+    mapping:
+      search_value:
+        type: text
+
+base_config:
+  - name: html_editor
+    group: css
+    parameters:
+      custom_css_url:
+        regex: "^https?://[^/]+?([a-z0-9]|/.*)$"
+        type: text
+        position: 1
