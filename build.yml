@@ -8,11 +8,13 @@ server:
     - l10n
 
 webfrontend:
-  # CoffeeScript 1.x, compiled + concatenated in this order into
-  # plugin.webfrontend.url (webfrontend/custom-data-type-html-editor.js)
-  coffee1:
-    - webfrontend/CustomDataTypeHtmlEditor.coffee
-    - webfrontend/CustomDataTypeHtmlEditorCSVImporterDestinationField.coffee
+  # assembled into plugin.webfrontend.url, in this order:
+  # .coffee is compiled (CoffeeScript 1.x), .scss compiled,
+  # anything else taken verbatim
+  bundles:
+    - sources:
+        - webfrontend/CustomDataTypeHtmlEditor.coffee
+        - webfrontend/CustomDataTypeHtmlEditorCSVImporterDestinationField.coffee
   # compiled to same-named .css; base.css is loaded into the editor and
   # detail iframes, custom-data-type-html-editor.css is the plugin css
   scss:
