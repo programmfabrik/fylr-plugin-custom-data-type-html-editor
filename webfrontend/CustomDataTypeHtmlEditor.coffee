@@ -80,8 +80,10 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 		resultObject = opts.editor?.object # The editor will not be present in the preview editor (datamodel -> masks)
 		standard = resultObject?.getStandard() or ""
 
-		baseCssURL = @__getBaseCSSURL()
+		contentCSS = [ CustomDataTypeHtmlEditor.getAssetURL("base.css") ]
 		customCSSURL = ez5.session.getBaseConfig("plugin", "custom-data-type-html-editor").html_editor?.custom_css_url
+		if customCSSURL
+			contentCSS.push(customCSSURL)
 		editorToolbar = "undo redo | image | styleselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | outdent indent numlist bullist"
 		inputEditor = null
 
@@ -97,7 +99,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 					toolbar: editorToolbar
 					toolbar_mode: 'sliding'
 					target: inputElement
-					content_css: [baseCssURL, customCSSURL]
+					content_css: contentCSS
 					plugins: "image paste lists"
 					paste_data_images: true
 					setup: ((inputText) ->
@@ -207,7 +209,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 						target: windowInputElement
 						toolbar_mode: 'sliding'
 						height: "100%"
-						content_css: [baseCssURL, customCSSURL]
+						content_css: contentCSS
 						plugins: "image paste lists"
 						setup: ((inputText) ->
 							windowInputEditor = inputText
@@ -255,13 +257,9 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 		)
 		return linkElement
 
-	__getBaseCSSURL: ->
-		plugin = ez5.pluginManager.getPlugin("custom-data-type-html-editor")
-		return ez5.getAbsoluteURL(plugin.getBaseURL() + "/base.css")
-
 	__getBaseCSSElement: ->
 		linkElement = CUI.dom.element("link",
-			href: @__getBaseCSSURL()
+			href: CustomDataTypeHtmlEditor.getAssetURL("base.css")
 			rel: "stylesheet"
 			type: "text/css"
 		)
@@ -276,42 +274,49 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 			return div
 
 		iframe = CUI.dom.$element("iframe", "ez5-custom-data-type-html-editor-iframe")
+		iframe.setAttribute("scrolling", "no") # We size the iframe to its content, a scrollbar would make the width oscillate.
 
 		html = CUI.dom.element("html")
 		head = CUI.dom.element("head")
 		body = CUI.dom.element("body")
+		# The body is stretched to the height of the iframe, so the content goes into a div we can measure ("flow-root" keeps its outer margins inside).
+		contentNode = CUI.dom.div("ez5-custom-data-type-html-editor-content")
+		CUI.dom.setStyle(contentNode, "display": "flow-root")
 
 		CUI.dom.append(html, head)
 		CUI.dom.append(html, body)
 		CUI.dom.setStyle(body, "margin": "0px") # Remove the default margin of the HTML.
 
-		CUI.dom.append(body, bodyContent)
-		# append base style CSS
-		baseLinkElement = @__getBaseCSSElement()
-		if baseLinkElement
-			CUI.dom.append(head, baseLinkElement)
+		CUI.dom.append(contentNode, bodyContent)
+		CUI.dom.append(body, contentNode)
+		CUI.dom.append(head, @__getBaseCSSElement())
 
-		# append custom style CSS
 		customLinkElement = @__getCustomCSSElement()
 		if customLinkElement
 			CUI.dom.append(head, customLinkElement)
 
 		iframe.addEventListener("load", =>
-			iframeContent = iframe.contentDocument.documentElement
-			iframeContent.innerHTML = html.innerHTML
+			doc = iframe.contentDocument
+			doc.documentElement.innerHTML = html.innerHTML
 
-			# Resize iframe to its actual content
-			# todo: something is still off with the height
-			# todo: can we make this dynamic, so the iframe changes when the outside changes (sidebar)
-			doc = iframe.contentDocument || iframe.contentWindow.document
+			node = doc.body.firstElementChild
+			lastHeight = null
+			resize = ->
+				if not CUI.dom.isInDOM(iframe)
+					resizeObserver.disconnect()
+					return
+				height = Math.ceil(node.getBoundingClientRect().height)
+				if height == lastHeight
+					return
+				lastHeight = height
+				CUI.dom.setStyleOne(iframe, "height", height + "px")
+				return
 
-			# Pick the larger of body/document heights to be safe
-			height = Math.max(
-				doc.body.scrollHeight,
-				doc.documentElement.scrollHeight
-			)
-
-			iframe.style.height = height + 'px';
+			# Fires on the content itself (stylesheets, fonts and images arrive late) and on every width change from the outside.
+			resizeObserver = new ResizeObserver(resize)
+			resizeObserver.observe(node)
+			resize()
+			return
 		)
 
 		resultObject = opts.detail?.object
@@ -331,19 +336,16 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 				features = "toolbar=no,status=no,menubar=no,scrollbars=yes,width=#{window.innerWidth},height=#{window.innerHeight}"
 				win = window.open("", "_blank", features)
 
-				newInputElement = CUI.dom.element("input")
-				newInputElement.value = initData.value
 				win.document.title = $$("custom.data.type.html-editor.detail.window.title",
 					standard: standardTitle
 					fieldName: @ColumnSchema._name_localized
 				)
-				
-				# add custom stylesheet to preview
-				if baseLinkElement
-					win.document.head.appendChild(baseLinkElement)			
-				
-				if customLinkElement
-					win.document.head.appendChild(customLinkElement)
+
+				# New elements, appending moves them out of the iframe document.
+				win.document.head.appendChild(@__getBaseCSSElement())
+				customCSSElement = @__getCustomCSSElement()
+				if customCSSElement
+					win.document.head.appendChild(customCSSElement)
 
 				win.document.body.innerHTML = initData.value
 				win.addEventListener('beforeunload', ->
@@ -373,6 +375,13 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 
 		save_data[@name()] = CustomDataTypeHtmlEditor.buildData(fieldData.value)
 		return save_data[@name()]
+
+	# Files shipped with the plugin are served below its base URL.
+	@getAssetURL: (path) ->
+		baseURL = ez5.pluginManager.getPlugin("custom-data-type-html-editor").getBaseURL()
+		if not baseURL.endsWith("/")
+			baseURL = baseURL + "/"
+		return ez5.getAbsoluteURL(baseURL + path)
 
 	@buildData: (stringContent) ->
 		if CUI.util.isEmpty(stringContent)
@@ -421,7 +430,6 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 CustomDataType.register(CustomDataTypeHtmlEditor)
 
 ez5.session_ready ->
-	plugin = ez5.pluginManager.getPlugin("custom-data-type-html-editor")
-	url = ez5.getAbsoluteURL(plugin.getBaseURL() + "/tinymce/tinymce.min.js")
+	url = CustomDataTypeHtmlEditor.getAssetURL("tinymce/tinymce.min.js")
 	CustomDataTypeHtmlEditor.loadLibraryPromise = CUI.loadScript(url)
 	return
