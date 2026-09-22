@@ -43,6 +43,19 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 		return badge
 
 	getSearchFilter: (data, key=@name()) ->
+		# The field itself is not searchable, both filters have to go to the mapped "search_value".
+		if data[key+":unset"]
+			filter =
+				type: "in"
+				fields: @getFieldNamesForSearch()
+				in: [ null ]
+			filter._unnest = true
+			filter._unset_filter = true
+			return filter
+
+		if data[key+":has_value"]
+			return @getHasValueFilter(data, key)
+
 		filter = super(data, key)
 		if filter
 			return filter
@@ -67,6 +80,18 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 					fields: @getFieldNamesForSearch()
 					in: [ str ]
 		filter
+
+	getHasValueFilter: (data, key=@name()) ->
+		if not data[key+":has_value"]
+			return
+		filter =
+			type: "in"
+			fields: @getFieldNamesForSearch()
+			in: [ null ]
+			bool: "must_not"
+		filter._unnest = true
+		filter._has_value_filter = true
+		return filter
 
 	__getFieldNames: ->
 		fieldNames = [
