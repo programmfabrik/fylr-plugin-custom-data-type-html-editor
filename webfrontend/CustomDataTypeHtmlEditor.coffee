@@ -327,9 +327,6 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 			node = doc.body.firstElementChild
 			lastHeight = null
 			resize = ->
-				if not CUI.dom.isInDOM(iframe)
-					resizeObserver.disconnect()
-					return
 				height = Math.ceil(node.getBoundingClientRect().height)
 				if height == lastHeight
 					return
@@ -337,10 +334,13 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 				CUI.dom.setStyleOne(iframe, "height", height + "px")
 				return
 
-			# Fires on the content itself (stylesheets, fonts and images arrive late) and on every width change from the outside.
-			resizeObserver = new ResizeObserver(resize)
-			resizeObserver.observe(node)
+			# The stylesheet, the webfont and the images all arrive after this, and the width follows the panel.
+			# The listeners live in the document of the iframe, so they go away with it.
+			doc.addEventListener("load", resize, true)
+			doc.fonts?.ready.then(resize)
+			iframe.contentWindow.addEventListener("resize", resize)
 			resize()
+			window.requestAnimationFrame(resize) # The first measure can land before the layout has settled.
 			return
 		)
 
