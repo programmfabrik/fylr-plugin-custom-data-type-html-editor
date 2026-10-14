@@ -264,6 +264,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 					return
 				)
 
+		
 		editorContent = new CUI.VerticalLayout
 			top: content: placeholderLabel
 			center: content: inputElement
@@ -332,6 +333,12 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 					return
 				lastHeight = height
 				CUI.dom.setStyleOne(iframe, "height", height + "px")
+				# The minimized height comes from the CSS, the button and the fade only make sense when it cuts something off.
+				if not CUI.dom.hasClass(iframe, "is-maximized")
+					if height > iframe.clientHeight
+						CUI.dom.addClass(iframe, "is-minimized")
+					else
+						CUI.dom.removeClass(iframe, "is-minimized")
 				return
 
 			# The stylesheet, the webfont and the images all arrive after this, and the width follows the panel.
@@ -352,9 +359,9 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 		standardTitle = ez5.loca.getBestDatabaseValue(standard?["1"]?.text) or ""
 
 		openButton = new LocaButton
-			loca_key: "custom.data.type.html-editor.detail.window.open-button"
-			appearance: "link"
-			size: "mini"
+			loca_key: "custom.data.type.html-editor.detail.window.open-button"			
+			class: "cui-button-href"
+			icon: "fa-external-link"
 			onClick: =>
 				openButton.disable()
 
@@ -378,11 +385,30 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 				)
 				return
 
+		showMoreButton = new LocaButton
+			loca_key: "custom.data.type.html-editor.detail.show-more-button"
+			class: "ez5-custom-data-type-html-editor-show-more-button cui-button-href"
+			switch: true
+			# With icons set, LocaButton no longer falls back to the "text" of the loca key, so both texts are passed (with a default for a missing key).
+			text_inactive: ez5.loca.str("custom.data.type.html-editor.detail.show-more-button|text_inactive", null, ez5.loca.culture, "...read more")
+			text_active: ez5.loca.str("custom.data.type.html-editor.detail.show-more-button|text_active", null, ez5.loca.culture, "less")
+			icon_inactive: "fa-plus-square-o"
+			icon_active: "fa-minus-square-o"
+			onActivate: =>
+				CUI.dom.addClass(iframe, "is-maximized")
+				return
+			onDeactivate: =>
+				CUI.dom.removeClass(iframe, "is-maximized")
+				# The content shrinks above the reader, take them back to where it starts ("nearest" leaves it alone when it is in view).
+				iframe.scrollIntoView(block: "nearest")
+				return
+
 		detailContent = new CUI.VerticalLayout
+			class: "ez5-custom-data-type-html-editor-detail"
 			center:
 				content: iframe
 			bottom:
-				content: openButton
+				content: [showMoreButton, openButton]
 		return detailContent
 
 	getTemplateValue: (data) ->

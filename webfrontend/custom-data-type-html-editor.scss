@@ -6,7 +6,45 @@
 .ez5-custom-data-type-html-editor-iframe {
 	border: none;
 	width: 100%;
-}	
+}
+
+// Detail: the iframe starts minimized and fades out, the "show more" button maximizes it.
+.ez5-custom-data-type-html-editor-detail {
+	--html-editor-minimized-height: 200px;
+	--html-editor-fade-height: 60px;
+
+	.ez5-custom-data-type-html-editor-iframe {
+		max-height: var(--html-editor-minimized-height); // Wins over the inline height the content sets.
+
+		&.is-minimized:not(.is-maximized) {
+			mask-image: linear-gradient(to bottom, #000 calc(100% - var(--html-editor-fade-height)), transparent);
+		}
+
+		&.is-maximized {
+			max-height: none;
+		}
+	}
+
+	.ez5-custom-data-type-html-editor-show-more-button {
+		display: none;
+	}
+
+	// The button sits in another cell of the layout, so it follows the state of the iframe.
+	&:has(.ez5-custom-data-type-html-editor-iframe.is-minimized) .ez5-custom-data-type-html-editor-show-more-button {
+		display: block;
+	}
+
+	.cui-vertical-layout-bottom > .cui-buttonbar:has(.cui-button-href) {
+		.cui-button-href:not(:first-child) {
+			&::before {
+				content: '';
+				border-left: 1px solid currentColor;
+				display: inline-block;
+				height: var(--font-size-base);
+			}
+		}
+	}
+}
 
 .ez5-custom-data-type-html-editor-description {
 	margin-bottom: var(--pane-padding, var(--ng-padding));
