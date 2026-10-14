@@ -21,6 +21,12 @@ body, .mce-content-body {
 
 	&:not(:has(> .ez5-custom-data-type-html-editor-content)) {
 		padding: $spacer;
+
+		@media (width >= 1000px) {
+			width: 75vw;
+			max-width: 992px;
+			margin: 0 auto;
+		}
 	}
 }
 
