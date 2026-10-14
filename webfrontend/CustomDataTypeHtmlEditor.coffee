@@ -291,6 +291,10 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 		)
 		return linkElement
 
+	# Links in the content would otherwise open in the iframe or the content window itself.
+	__getBaseTargetElement: ->
+		return CUI.dom.element("base", target: "_blank")
+
 	renderDetailOutput: (data, topLevelData, opts) ->
 		initData = @__initData(data)
 		bodyContent = CUI.dom.htmlToNodes(initData.value)
@@ -305,6 +309,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 		html = CUI.dom.element("html")
 		head = CUI.dom.element("head")
 		body = CUI.dom.element("body")
+		CUI.dom.append(head, @__getBaseTargetElement())
 		# The body is stretched to the height of the iframe, so the content goes into a div we can measure ("flow-root" keeps its outer margins inside).
 		contentNode = CUI.dom.div("ez5-custom-data-type-html-editor-content")
 		CUI.dom.setStyle(contentNode, "display": "flow-root")
@@ -365,8 +370,8 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 			onClick: =>
 				openButton.disable()
 
-				features = "toolbar=no,status=no,menubar=no,scrollbars=yes,width=#{window.innerWidth},height=#{window.innerHeight}"
-				win = window.open("", "_blank", features)
+				# A tab, not a popup: a popup has no tabs of its own, so its links would open in the main window.
+				win = window.open("", "_blank")
 
 				win.document.title = $$("custom.data.type.html-editor.detail.window.title",
 					standard: standardTitle
@@ -374,6 +379,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 				)
 
 				# New elements, appending moves them out of the iframe document.
+				win.document.head.appendChild(@__getBaseTargetElement())
 				win.document.head.appendChild(@__getBaseCSSElement())
 				customCSSElement = @__getCustomCSSElement()
 				if customCSSElement
