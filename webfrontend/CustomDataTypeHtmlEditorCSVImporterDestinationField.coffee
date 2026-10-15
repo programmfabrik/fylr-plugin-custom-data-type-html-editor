@@ -12,7 +12,7 @@ class CustomDataTypeHtmlEditorCSVImporterDestinationField extends CustomDataType
 			try
 				_data = JSON.parse(value)
 				if CUI.util.isPlainObject(_data)
-					data.push(_data)
+					data.push(CustomDataTypeHtmlEditor.buildData(_data.value))
 					continue
 
 			if not CUI.isString(value)
