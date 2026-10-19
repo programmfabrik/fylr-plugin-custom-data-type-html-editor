@@ -113,7 +113,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 		inputEditor = null
 
 		inputElement = CUI.dom.element("input")
-		inputElement.value = initData.value
+		inputElement.value = CustomDataTypeHtmlEditor.sanitize(initData.value)
 		CUI.dom.addClass(inputElement, "ez5-custom-data-type-html-editor-fixed-height")
 		CUI.dom.setStyle(inputElement, visibility: "hidden")
 
@@ -188,7 +188,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 				win.document.head.appendChild(pluginCSSLinkElement)
 
 				windowInputElement = CUI.dom.element("input")
-				windowInputElement.value = initData.value
+				windowInputElement.value = CustomDataTypeHtmlEditor.sanitize(initData.value)
 
 				verticalLayout = new CUI.VerticalLayout
 					class: "ez5-custom-data-type-html-editor-window"
@@ -297,7 +297,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 
 	renderDetailOutput: (data, topLevelData, opts) ->
 		initData = @__initData(data)
-		bodyContent = CUI.dom.htmlToNodes(initData.value)
+		bodyContent = CUI.dom.htmlToNodes(CustomDataTypeHtmlEditor.sanitize(initData.value))
 		if opts.for_print
 			div = CUI.dom.div()
 			CUI.dom.append(div, bodyContent)
@@ -305,6 +305,8 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 
 		iframe = CUI.dom.$element("iframe", "ez5-custom-data-type-html-editor-iframe")
 		iframe.setAttribute("scrolling", "no") # We size the iframe to its content, a scrollbar would make the width oscillate.
+		# Never allow-scripts: next to allow-same-origin (needed to fill and measure it from here) the content could lift the sandbox.
+		iframe.setAttribute("sandbox", "allow-same-origin allow-popups allow-popups-to-escape-sandbox")
 
 		html = CUI.dom.element("html")
 		head = CUI.dom.element("head")
@@ -378,6 +380,13 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 					fieldName: @ColumnSchema._name_localized
 				)
 
+				# Same-origin with fylr and without a sandbox: the policy backs up the sanitizing.
+				cspElement = CUI.dom.element("meta",
+					"http-equiv": "Content-Security-Policy"
+					content: "script-src 'none'; form-action 'none'"
+				)
+				win.document.head.appendChild(cspElement)
+
 				# New elements, appending moves them out of the iframe document.
 				win.document.head.appendChild(@__getBaseTargetElement())
 				win.document.head.appendChild(@__getBaseCSSElement())
@@ -385,7 +394,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 				if customCSSElement
 					win.document.head.appendChild(customCSSElement)
 
-				win.document.body.innerHTML = initData.value
+				win.document.body.innerHTML = CustomDataTypeHtmlEditor.sanitize(initData.value)
 				win.addEventListener('beforeunload', ->
 					openButton.enable()
 				)
@@ -440,12 +449,19 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 			baseURL = baseURL + "/"
 		return ez5.getAbsoluteURL(baseURL + path)
 
+	# The value also arrives through the API and the CSV import, which never pass TinyMCE.
+	# DOMPurify comes with the plugin (lib/purify.min.js in the bundle), the frontend does not expose its own.
+	@sanitize: (html) ->
+		return DOMPurify.sanitize(html, ADD_ATTR: ["target"])
+
 	@buildData: (stringContent) ->
+		stringContent = CustomDataTypeHtmlEditor.sanitize(stringContent)
 		if CUI.util.isEmpty(stringContent)
 			return null
 
 		searchValue = []
-		for _, value of CUI.dom.htmlToNodes(stringContent)
+		# A parsed document has no browsing context, nothing gets loaded while we read the text.
+		for value in new DOMParser().parseFromString(stringContent, "text/html").body.childNodes
 			text = value.textContent
 			if not text or /^(\s|\n)$/.test(text)
 				continue

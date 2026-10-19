@@ -13,6 +13,7 @@ webfrontend:
   # anything else taken verbatim
   bundles:
     - sources:
+        - webfrontend/lib/purify.min.js
         - webfrontend/CustomDataTypeHtmlEditor.coffee
         - webfrontend/CustomDataTypeHtmlEditorCSVImporterDestinationField.coffee
   # compiled to same-named .css; base.css is loaded into the editor and
