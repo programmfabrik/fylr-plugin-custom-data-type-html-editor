@@ -34,7 +34,8 @@
 		display: block;
 	}
 
-	.cui-vertical-layout-bottom > .cui-buttonbar:has(.cui-button-href) {
+	// The separator only makes sense next to the "show more" button, which is hidden when nothing is cut off.
+	&:has(.ez5-custom-data-type-html-editor-iframe.is-minimized) .cui-vertical-layout-bottom > .cui-buttonbar:has(.cui-button-href) {
 		.cui-button-href:not(:first-child) {
 			&::before {
 				content: '';
