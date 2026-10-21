@@ -348,8 +348,24 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 						CUI.dom.removeClass(iframe, "is-minimized")
 				return
 
+			# Clicks in the iframe never reach this document, the result list needs them to select the record (links open on their own).
+			forwardClick = (ev) ->
+				if ev.target.closest?("a")
+					return
+				iframe.dispatchEvent(new MouseEvent(ev.type,
+					bubbles: true
+					cancelable: true
+					ctrlKey: ev.ctrlKey
+					shiftKey: ev.shiftKey
+					altKey: ev.altKey
+					metaKey: ev.metaKey
+				))
+				return
+
 			# The stylesheet, the webfont and the images all arrive after this, and the width follows the panel.
 			# The listeners live in the document of the iframe, so they go away with it.
+			doc.addEventListener("click", forwardClick)
+			doc.addEventListener("dblclick", forwardClick)
 			doc.addEventListener("load", resize, true)
 			doc.fonts?.ready.then(resize)
 			iframe.contentWindow.addEventListener("resize", resize)
