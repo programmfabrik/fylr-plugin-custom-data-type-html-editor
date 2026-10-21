@@ -411,6 +411,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 					win.document.head.appendChild(customCSSElement)
 
 				win.document.body.innerHTML = CustomDataTypeHtmlEditor.sanitize(initData.value)
+				CUI.dom.addClass(win.document.body, "ez5-custom-data-type-html-editor-page")
 				win.addEventListener('beforeunload', ->
 					openButton.enable()
 				)

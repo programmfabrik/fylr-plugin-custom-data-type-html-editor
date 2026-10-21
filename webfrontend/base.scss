@@ -18,15 +18,23 @@ body, .mce-content-body {
 	font-size: $font-size-base;
 	line-height: $line-height-base;
 	color: $body-color;
+}
 
-	&:not(:has(> .ez5-custom-data-type-html-editor-content)) {
-		padding: $spacer;
+// The editor and the content in its own tab get a readable column in the middle.
+.mce-content-body, .ez5-custom-data-type-html-editor-page {
+	box-sizing: border-box;
+	max-width: 62rem;
+	margin: 0 auto;
+	padding: $spacer;
+}
 
-		@media (width >= 1000px) {
-			width: 75vw;
-			max-width: 992px;
-			margin: 0 auto;
-		}
+.ez5-custom-data-type-html-editor-page {
+	padding: $spacer-xl $spacer-lg;
+
+	// Pasted content often brings images wider than the column.
+	img, video {
+		max-width: 100%;
+		height: auto;
 	}
 }
 
