@@ -46,6 +46,10 @@ follows the fylr typography.
 *Open the HTML Editor in a new window* gives the editor the whole screen; the record cannot
 be saved while that window is open, and its content is taken over with *Apply*.
 
+Links are added with the link button or Ctrl+K (Cmd+K on macOS): URL, text to display,
+title and whether the link opens in a new window. An address without a protocol, like
+`www.example.org`, gets `https://`.
+
 Images can be pasted, dropped onto the editor or added by URL. A pasted or dropped image is
 stored inside the HTML as a data URI, so it travels with the record and is not a fylr asset —
 keep an eye on the size of what is pasted.

@@ -109,7 +109,15 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 		customCSSURL = ez5.session.getBaseConfig("plugin", "custom-data-type-html-editor").html_editor?.custom_css_url
 		if customCSSURL
 			contentCSS.push(customCSSURL)
-		editorToolbar = "undo redo | image | styleselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | outdent indent numlist bullist"
+		editorOptions =
+			menubar: false
+			toolbar: "undo redo | link image | styleselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | outdent indent numlist bullist"
+			toolbar_mode: 'sliding'
+			content_css: contentCSS
+			plugins: "link image paste lists"
+			# "www.x.org" gets https://, and URLs are kept as typed instead of made relative to fylr.
+			link_assume_external_targets: "https"
+			convert_urls: false
 		inputEditor = null
 
 		inputElement = CUI.dom.element("input")
@@ -119,13 +127,8 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 
 		CustomDataTypeHtmlEditor.loadLibraryPromise.done(->
 			CUI.dom.waitForDOMInsert(node: inputElement).done(->
-				tinymce.init(
-					menubar:false
-					toolbar: editorToolbar
-					toolbar_mode: 'sliding'
+				tinymce.init(Object.assign({}, editorOptions,
 					target: inputElement
-					content_css: contentCSS
-					plugins: "image paste lists"
 					paste_data_images: true
 					setup: ((inputText) ->
 						CUI.dom.setStyle(inputElement, visibility: "")
@@ -138,7 +141,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 								type: "editor-changed"
 						)
 					)
-				)
+				))
 			)
 		)
 
@@ -228,18 +231,13 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 
 				windowInputEditor = null
 				CustomDataTypeHtmlEditor.loadLibraryPromise.done(->
-					tinymce.init(
-						menubar:false
-						toolbar: editorToolbar
+					tinymce.init(Object.assign({}, editorOptions,
 						target: windowInputElement
-						toolbar_mode: 'sliding'
 						height: "100%"
-						content_css: contentCSS
-						plugins: "image paste lists"
 						setup: ((inputText) ->
 							windowInputEditor = inputText
 						)
-					)
+					))
 				)
 
 				win.addEventListener('beforeunload', (e) ->
