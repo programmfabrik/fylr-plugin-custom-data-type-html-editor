@@ -133,6 +133,9 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 					setup: ((inputText) ->
 						CUI.dom.setStyle(inputElement, visibility: "")
 						inputEditor = inputText
+						inputText.on('init', ->
+							openEditorButton.enable()
+						)
 						inputText.on('change', ->
 							initData.value = inputText.getContent()
 
@@ -156,6 +159,8 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 			loca_key: "custom.data.type.html-editor.editor.window.open-button"
 			appearance: "link"
 			size: "mini"
+			# The click needs the inline editor, which is still loading for a moment.
+			disabled: true
 			onClick: =>
 				saveChanges = false
 				manualClose = false
@@ -252,13 +257,15 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 					CUI.dom.showElement(inputEditor.getContainer())
 					delete initData._editorWindowOpen
 
-					if saveChanges
+					if saveChanges and windowInputEditor?.initialized
 						initData.value = windowInputEditor.getContent()
 						inputEditor.setContent(initData.value)
 
 						CUI.Events.trigger
 							node: editorContent
 							type: "editor-changed"
+					# Left registered, TinyMCE keeps resizing an editor whose window is gone, which throws in Firefox.
+					windowInputEditor?.remove()
 					return
 				)
 
