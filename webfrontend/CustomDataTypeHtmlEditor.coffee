@@ -134,6 +134,7 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 						CUI.dom.setStyle(inputElement, visibility: "")
 						inputEditor = inputText
 						inputText.on('init', ->
+							waitBlock.destroy()
 							openEditorButton.enable()
 						)
 						inputText.on('change', ->
@@ -274,6 +275,9 @@ class CustomDataTypeHtmlEditor extends CustomDataType
 			top: content: placeholderLabel
 			center: content: inputElement
 			bottom: content: openEditorButton
+
+		# TinyMCE takes a few seconds to load on a remote instance, the field is not left blank meanwhile.
+		waitBlock = new CUI.WaitBlock(element: editorContent.center()).show()
 
 		return editorContent
 
